@@ -1,22 +1,20 @@
+import { GUI } from 'dat.gui'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
-import { CARD_SIZES, resizeRenderer } from './utils'
-
-import backCard from './assets/backcard.png'
-import frontCard from './assets/uct.jpg'
+//@ts-ignore
+import Stats from 'three/examples/jsm/libs/stats.module'
+import { CARD_SIZES, loadSprite, LOCAL_CARDS, resizeRenderer, UTILITY_IMGS, type LOCAL_CARD_VALUES } from './utils'
 
 window.addEventListener(
 	'load',
 	() => {
 		const canvas = document.querySelector('#main-canvas')!
 		const renderer = new THREE.WebGLRenderer({ antialias: true, canvas, alpha: true })
+		const scene = new THREE.Scene()
 
 		//! camera
 		const camera = new THREE.PerspectiveCamera(75, 2, 0.1, 1000)
 		camera.position.set(0, 0, 0)
-
-		//! scene
-		const scene = new THREE.Scene()
 
 		//! lights
 		const ambientLight = new THREE.AmbientLight(THREE.Color.NAMES.white, 1)
@@ -33,39 +31,68 @@ window.addEventListener(
 		camera.position.set(0, 20, 100)
 		controls.update()
 
+		controls.minDistance = 20
+		controls.maxDistance = 200
+		controls.enableDamping = true
+		controls.dampingFactor = 0.03
+		controls.enablePan = false
+		//enable pan for both axis, with a limited scope
+
 		//! figure
-		const textureLoader = new THREE.TextureLoader()
-		const [frontTexture, backTexture] = [textureLoader.load(frontCard), textureLoader.load(backCard)]
-		frontTexture.colorSpace = THREE.SRGBColorSpace
-		backTexture.colorSpace = THREE.SRGBColorSpace
+		const LSprite = loadSprite()
 
 		const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 }) // i like this gray :)
-
-		const cardMat = [
+		const changeFrontCard = (img: LOCAL_CARD_VALUES = LOCAL_CARDS.MONSTER) => [
 			edgeMaterial,
 			edgeMaterial,
 			edgeMaterial,
 			edgeMaterial,
-			new THREE.MeshPhongMaterial({ map: frontTexture }),
-			new THREE.MeshPhongMaterial({ map: backTexture })
+			new THREE.MeshPhongMaterial({ map: LSprite(img) }),
+			new THREE.MeshPhongMaterial({ map: LSprite(UTILITY_IMGS.BACKCARD) })
 		]
+
+		const cardMat = changeFrontCard()
 		const cardGeo = new THREE.BoxGeometry(CARD_SIZES.WIDTH, CARD_SIZES.HEIGHT, CARD_SIZES.THICKNESS)
 
-		const cardMesh = new THREE.Mesh(cardGeo, cardMat)
-		scene.add(cardMesh)
+		const card = new THREE.Mesh(cardGeo, cardMat)
+		scene.add(card)
 
-		//! reloads 60 fps
+		//! stats
+		const stats = Stats()
+		document.body.appendChild(stats.dom)
+
+		//! reloads 60 fps - render function
 		function tick() {
 			resizeRenderer(renderer, camera)
 
 			controls.update()
-			// cardMat.forEach((mat) => (mat.needsUpdate = true))
+			stats.update()
 			renderer.render(scene, camera)
 
 			requestAnimationFrame(tick)
 		}
 
 		requestAnimationFrame(tick)
+
+		//! datGUI
+		const gui = new GUI()
+
+		const cameraFolder = gui.addFolder('Camera')
+		cameraFolder.add({ Reset_CameraPosition: () => camera.position.set(0, 20, 100) }, 'Reset_CameraPosition')
+
+		const cardFolder = gui.addFolder('Card')
+		cardFolder
+			.add({ type_of_card: '' }, 'type_of_card', LOCAL_CARDS)
+			.onChange((type_card: LOCAL_CARD_VALUES) => (card.material = changeFrontCard(type_card)))
 	},
 	{ once: true }
 )
+
+// [
+// edgeMaterial,
+// edgeMaterial,
+// edgeMaterial,
+// edgeMaterial,
+// new THREE.MeshPhongMaterial({ map: LSprite(type_card) }),
+// new THREE.MeshPhongMaterial({ map: backTexture })
+// ]
