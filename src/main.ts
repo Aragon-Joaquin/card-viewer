@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
 //@ts-ignore
 import Stats from 'three/examples/jsm/libs/stats.module'
+import { applyShader, TYPES_SHADERS } from './core/applyShader'
 import { CARD_SIZES, loadSprite, LOCAL_CARDS, resizeRenderer, UTILITY_IMGS, type LOCAL_CARD_VALUES } from './utils'
 
 window.addEventListener(
@@ -38,7 +39,7 @@ window.addEventListener(
 		controls.enablePan = false
 		//enable pan for both axis, with a limited scope
 
-		//! figure
+		//! figure - Card
 		const LSprite = loadSprite()
 
 		const edgeMaterial = new THREE.MeshStandardMaterial({ color: 0x888888 }) // i like this gray :)
@@ -57,6 +58,11 @@ window.addEventListener(
 		const card = new THREE.Mesh(cardGeo, cardMat)
 		scene.add(card)
 
+		//! figure - card effect layer
+		const effectLayer = applyShader(TYPES_SHADERS.NONE)
+		effectLayer.translateZ(0.1)
+		scene.add(effectLayer)
+
 		//! stats
 		const stats = Stats()
 		document.body.appendChild(stats.dom)
@@ -64,6 +70,8 @@ window.addEventListener(
 		//! reloads 60 fps - render function
 		function tick() {
 			resizeRenderer(renderer, camera)
+
+			// effectLayer.material.uniforms.time.value += 0.01
 
 			controls.update()
 			stats.update()
@@ -82,17 +90,15 @@ window.addEventListener(
 
 		const cardFolder = gui.addFolder('Card')
 		cardFolder
-			.add({ type_of_card: '' }, 'type_of_card', LOCAL_CARDS)
+			.add({ Type_of_card: '' }, 'Type_of_card', LOCAL_CARDS)
 			.onChange((type_card: LOCAL_CARD_VALUES) => (card.material = changeFrontCard(type_card)))
+
+		const effectFolder = gui.addFolder('Effects')
+		effectFolder.add({ effects: '' }, 'effects', Object.keys(TYPES_SHADERS)).onChange((eff) => {
+			console.log(eff)
+
+			effectLayer.material = TYPES_SHADERS[eff as keyof typeof TYPES_SHADERS]
+		})
 	},
 	{ once: true }
 )
-
-// [
-// edgeMaterial,
-// edgeMaterial,
-// edgeMaterial,
-// edgeMaterial,
-// new THREE.MeshPhongMaterial({ map: LSprite(type_card) }),
-// new THREE.MeshPhongMaterial({ map: backTexture })
-// ]
