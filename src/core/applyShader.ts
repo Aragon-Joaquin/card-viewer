@@ -1,10 +1,11 @@
 import { Mesh, PlaneGeometry } from 'three'
 import { CARD_SIZES } from '../utils'
-import { Blink, defaultMesh } from './effects'
+import { Blink, defaultMesh, Refractive } from './effects'
 
 export const TYPES_SHADERS = {
 	NONE: defaultMesh(),
-	BLINK: Blink()
+	BLINK: Blink(),
+	REFRACTIVE: Refractive()
 }
 
 export function applyShader(shaderName: (typeof TYPES_SHADERS)[keyof typeof TYPES_SHADERS]) {

@@ -23,9 +23,9 @@ window.addEventListener(
 		const frontLight = new THREE.DirectionalLight(THREE.Color.NAMES.white, 3)
 		frontLight.position.set(CARD_SIZES.WIDTH, CARD_SIZES.HEIGHT / 2, 50)
 
-		const lightHelper = new THREE.DirectionalLightHelper(frontLight, 5)
+		// const lightHelper = new THREE.DirectionalLightHelper(frontLight, 5)
 
-		scene.add(frontLight, ambientLight, lightHelper)
+		scene.add(frontLight, ambientLight)
 
 		//! orbit controls
 		const controls = new OrbitControls(camera, renderer.domElement)
@@ -71,7 +71,7 @@ window.addEventListener(
 		function tick() {
 			resizeRenderer(renderer, camera)
 
-			// effectLayer.material.uniforms.time.value += 0.01
+			effectLayer.material.uniforms.time.value += 0.01
 
 			controls.update()
 			stats.update()
@@ -85,20 +85,24 @@ window.addEventListener(
 		//! datGUI
 		const gui = new GUI()
 
+		//* camera
 		const cameraFolder = gui.addFolder('Camera')
 		cameraFolder.add({ Reset_CameraPosition: () => camera.position.set(0, 20, 100) }, 'Reset_CameraPosition')
 
+		//* card type
 		const cardFolder = gui.addFolder('Card')
-		cardFolder
+		const typeCard = cardFolder
 			.add({ Type_of_card: '' }, 'Type_of_card', LOCAL_CARDS)
 			.onChange((type_card: LOCAL_CARD_VALUES) => (card.material = changeFrontCard(type_card)))
 
-		const effectFolder = gui.addFolder('Effects')
-		effectFolder.add({ effects: '' }, 'effects', Object.keys(TYPES_SHADERS)).onChange((eff) => {
-			console.log(eff)
+		typeCard.setValue(LOCAL_CARDS.MONSTER)
 
+		//* shader
+		const effectFolder = gui.addFolder('Effects')
+		const shaders = effectFolder.add({ effects: '' }, 'effects', Object.keys(TYPES_SHADERS)).onChange((eff) => {
 			effectLayer.material = TYPES_SHADERS[eff as keyof typeof TYPES_SHADERS]
 		})
+		shaders.setValue(Object.keys(TYPES_SHADERS)[0])
 	},
 	{ once: true }
 )

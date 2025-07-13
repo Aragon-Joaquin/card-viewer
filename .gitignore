@@ -24,5 +24,4 @@ dist-ssr
 *.sw?
 
 # custom
-src/assets/*
 bun.lock
